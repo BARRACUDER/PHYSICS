@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Jump Animation</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .container {
+            position: relative;
+            width: 600px;
+            height: 400px;
+            border: 1px solid black;
+            margin: 20px auto;
+            overflow-y: scroll;
+            overflow-x: hidden;
+        }
+
+        /* Добавляем отдельный класс для земного неба */
+        .container.earth-sky {
+            background-color: #87CEEB;
+        }
+
+        /* Стили для звездного неба */
+        .container.space {
+            background: #000000;
+            background-image: 
+                radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 5px),
+                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 3px),
+                radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 4px),
+                radial-gradient(rgba(255,255,255,.4), rgba(255,255,255,.1) 1px, transparent 2px);
+            background-size: 550px 550px, 350px 350px, 250px 250px, 150px 150px;
+            background-position: 0 0, 40px 60px, 130px 270px, 70px 100px;
+        }
+
+        /* Стили для поверхностей планет */
+        .ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 70px; /* Увеличена высота поверхности */
+            background-color: #8B4513;
+            transition: all 0.3s ease;
+        }
+
+        /* Солнце */
+        .ground.sun {
+            background: linear-gradient(45deg, #ff4500, #ffd700);
+            animation: solarFlares 3s infinite;
+            box-shadow:
+                    0 0 50px #ff4500,
+                    0 0 100px #ff6b00,
+                    0 0 150px #ff8c00;
+        }
+
+        /* Меркурий */
+        .ground.mercury {
+            background:
+                    radial-gradient(circle at 20% 20%, rgba(85, 85, 85, 0.4) 5px, transparent 6px),
+                    radial-gradient(circle at 70% 40%, rgba(85, 85, 85, 0.4) 4px, transparent 5px),
+                    linear-gradient(45deg, #696969, #a9a9a9);
+        }
+
+        /* Венера */
+        .ground.venus {
+            background:
+                    radial-gradient(circle at 30% 30%, #d2691e 10px, transparent 11px),
+                    radial-gradient(circle at 70% 65%, #cd853f 8px, transparent 9px),
+                    linear-gradient(45deg, #deb887, #d2691e);
+        }
+
+        /* Земля */
+        .ground.earth {
+            background:
+                    radial-gradient(circle at 25% 25%, #228b22 15px, transparent 16px),
+                    radial-gradient(circle at 75% 75%, #8b4513 10px, transparent 11px),
+                    linear-gradient(45deg, #228b22, #8b4513);
+        }
+
+        /* Луна */
+        .ground.moon {
+            background:
+                    radial-gradient(circle at 15% 15%, rgba(0, 0, 0, 0.2) 8px, transparent 9px),
+                    radial-gradient(circle at 45% 45%, rgba(0, 0, 0, 0.2) 6px, transparent 7px),
+                    radial-gradient(circle at 75% 75%, rgba(0, 0, 0, 0.2) 10px, transparent 11px),
+                    linear-gradient(45deg, #e6e6e6, #ffffff);
+        }
+
+        /* Марс */
+        .ground.mars {
+            background:
+                    radial-gradient(circle at 20% 20%, #8b0000 7px, transparent 8px),
+                    radial-gradient(circle at 60% 60%, #8b0000 5px, transparent 6px),
+                    linear-gradient(45deg, #cd5c5c, #8b4513);
+        }
+
+        /* Юпитер */
+        .ground.jupiter {
+            background:
+                    radial-gradient(circle at 20% 20%, #CD853F 10px, transparent 11px),
+                    radial-gradient(circle at 60% 60%, #8B4513 8px, transparent 9px),
+                    linear-gradient(45deg, #DEB887, #CD853F);
+        }
+
+        .ground.jupiter::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                    radial-gradient(ellipse at 30% 40%, #FF4500 0%, transparent 50%),
+                    radial-gradient(ellipse at 70% 30%, #8B0000 0%, transparent 30%),
+                    radial-gradient(ellipse at 45% 60%, #CD853F 0%, transparent 40%),
+                    radial-gradient(ellipse at 85% 50%, #8B4513 0%, transparent 35%);
+            opacity: 0.3;
+        }
+
+        @keyframes solarFlares {
+            0% {
+                filter: brightness(1);
+                box-shadow:
+                        0 0 50px #ff4500,
+                        0 0 100px #ff6b00,
+                        0 0 150px #ff8c00;
+            }
+            50% {
+                filter: brightness(1.3);
+                box-shadow:
+                        0 0 70px #ff4500,
+                        0 0 140px #ff6b00,
+                        0 0 200px #ff8c00;
+            }
+            100% {
+                filter: brightness(1);
+                box-shadow:
+                        0 0 50px #ff4500,
+                        0 0 100px #ff6b00,
+                        0 0 150px #ff8c00;
+            }
+        }
+
+        .person {
+            position: absolute;
+            width: 80px;
+            height: 180px;
+            bottom: 30px; /* Изменено с 30px на 40px для поднятия человечка на 0.1 метр */
+            left: 260px;
+            z-index: 2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Остальные стили остаются без изменений */
+        .stick-figure {
+            width: 100%;
+            height: 100%;
+        }
+
+        .height-marks {
+            position: absolute;
+            right: 0;
+            width: 20px;
+            border-left: 1px solid #ffffff;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .height-mark {
+            position: absolute;
+            width: 10px;
+            height: 1px;
+            background-color: #ffffff;
+            right: 0;
+        }
+
+        .height-mark-small {
+            position: absolute;
+            width: 5px;
+            height: 1px;
+            background-color: #ffffff;
+            right: 0;
+        }
+
+        .height-label {
+            position: absolute;
+            right: 25px;
+            transform: translateY(-50%);
+            font-size: 10px;
+            pointer-events: none;
+            color: #ffffff;
+            background-color: transparent;
+            padding: 0 2px;
+        }
+
+        .slider-container {
+            width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        .slider {
+            width: 100%;
+            height: 25px;
+            -webkit-appearance: none;
+            background: #d3d3d3;
+            outline: none;
+            opacity: 0.7;
+            -webkit-transition: .2s;
+            transition: opacity .2s;
+        }
+
+        .slider:hover {
+            opacity: 1;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            background: #4CAF50;
+            cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 25px;
+            height: 25px;
+            background: #4CAF50;
+            cursor: pointer;
+        }
+
+        .slider-value {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 18px;
+        }
+
+        .content {
+            height: 10000px;
+            position: relative;
+        }
+
+        .height-indicator {
+            position: absolute;
+            right: 20px;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 3;
+            bottom: 50px;
+        }
+    </style>
+</head>
+<body>
+<h1>Planetary Jump</h1>
+<form id="jumpForm">
+    <label for="planet">Planet:</label>
+    <select id="planet" name="planet" required>
+        <option value="sun">Sun</option>
+        <option value="mercury">Mercury</option>
+        <option value="venus">Venus</option>
+        <option value="earth">Earth</option>
+        <option value="moon">Moon</option>
+        <option value="mars">Mars</option>
+        <option value="jupiter">Jupiter</option>
+    </select><br><br>
+
+    <label for="velocity">Initial Velocity (m/s):</label>
+    <input type="number" id="velocity" name="velocity" value="5" step="0.1" required><br><br>
+
+    <button type="submit">Jump</button>
+</form>
+
+<div class="container">
+    <div class="content">
+        <div class="ground"></div>
+        <div class="person">
+            <svg class="stick-figure" viewBox="0 0 80 180">
+                <!-- Основное тело скафандра (сначала, чтобы было позади) -->
+                <path d="M30 60 Q40 55 50 60 L55 110 Q40 115 25 110 Z" 
+                      fill="#f0f0f0" stroke="#333" stroke-width="2"/>
+                
+                <!-- Ноги (теперь они рисуются первыми после тела) -->
+                <g id="leftLeg" transform-origin="35 110">
+                    <!-- Левая нога (левая от зрителя) -->
+                    <path d="M35 110 L35 140" 
+                          fill="none" stroke="#f0f0f0" stroke-width="8" stroke-linecap="round"/>
+                    <path d="M35 140 L35 165" 
+                          fill="none" stroke="#f0f0f0" stroke-width="8" stroke-linecap="round"/>
+                    <path d="M31 165 L35 170 L40 170 L40 165 Z" 
+                          fill="#888" stroke="#333" stroke-width="1.5"/>
+                </g>
+                
+                <g id="rightLeg" transform-origin="45 110">
+                    <!-- Правая нога (правая от зрителя) -->
+                    <path d="M45 110 L45 140" 
+                          fill="none" stroke="#f0f0f0" stroke-width="8" stroke-linecap="round"/>
+                    <path d="M45 140 L45 165" 
+                          fill="none" stroke="#f0f0f0" stroke-width="8" stroke-linecap="round"/>
+                    <path d="M41 165 L45 170 L50 170 L50 165 Z" 
+                          fill="#888" stroke="#333" stroke-width="1.5"/>
+                </g>
+                
+                <!-- Руки (после ног, чтобы быть поверх) -->
+                <g id="leftArm" transform-origin="32 65">
+                    <!-- Левая рука (левая от зрителя) -->
+                    <path d="M32 65 L25 85" 
+                          fill="none" stroke="#f0f0f0" stroke-width="8" stroke-linecap="round"/>
+                    <path d="M25 85 L30 100" 
+                          fill="none" stroke="#f0f0f0" stroke-width="8" stroke-linecap="round"/>
+                    <circle cx="30" cy="100" r="4" fill="#f0f0f0" stroke="#333" stroke-width="1.5"/>
+                </g>
+                
+                <g id="rightArm" transform-origin="48 65">
+                    <!-- Правая рука (правая от зрителя) -->
+                    <path d="M48 65 L55 85" 
+                          fill="none" stroke="#f0f0f0" stroke-width="8" stroke-linecap="round"/>
+                    <path d="M55 85 L50 100" 
+                          fill="none" stroke="#f0f0f0" stroke-width="8" stroke-linecap="round"/>
+                    <circle cx="50" cy="100" r="4" fill="#f0f0f0" stroke="#333" stroke-width="1.5"/>
+                </g>
+
+                <!-- Шлем (поверх всего) -->
+                <path d="M25 35 Q25 15 40 15 Q55 15 55 35 Q55 55 40 55 Q25 55 25 35" 
+                      fill="#f0f0f0" stroke="#333" stroke-width="2"/>
+                <path d="M30 25 Q40 20 50 25 Q50 40 40 45 Q30 40 30 25" 
+                      fill="#add8e6" stroke="#333" stroke-width="1.5" opacity="0.7"/>
+                
+                <!-- Остальные детали остаются без изменений -->
+                <!-- Система жизнеобеспечения -->
+                <rect x="32" y="65" width="16" height="25" rx="2" 
+                      fill="#ddd" stroke="#333" stroke-width="1"/>
+                <circle cx="40" cy="72" r="2" fill="#666"/>
+                <circle cx="40" cy="78" r="2" fill="#666"/>
+                <circle cx="40" cy="84" r="2" fill="#666"/>
+                
+                <!-- Шланги -->
+                <path d="M32 65 C30 60 30 55 32 50" fill="none" 
+                      stroke="#666" stroke-width="1.5" stroke-dasharray="2,2"/>
+                <path d="M48 65 C50 60 50 55 48 50" fill="none" 
+                      stroke="#666" stroke-width="1.5" stroke-dasharray="2,2"/>
+                
+                <!-- Детали костюма -->
+                <circle cx="35" cy="75" r="1.5" fill="#666"/>
+                <circle cx="45" cy="75" r="1.5" fill="#666"/>
+                <circle cx="35" cy="95" r="1.5" fill="#666"/>
+                <circle cx="45" cy="95" r="1.5" fill="#666"/>
+                
+                <!-- Отражения на шлеме -->
+                <path d="M35 25 Q37 23 40 22" fill="none" 
+                      stroke="#fff" stroke-width="2" opacity="0.5"/>
+                <circle cx="38" cy="23" r="1" fill="#fff" opacity="0.3"/>
+            </svg>
+        </div>
+        <div class="height-marks" id="heightMarks"></div>
+        <div class="height-indicator" id="heightIndicator">0.0m</div>
+    </div>
+</div>
+
+<div class="slider-container">
+    <input type="range" min="-1" max="100" value="-1" class="slider" id="heightSlider">
+    <div class="slider-value">Height: <span id="sliderValue">-1</span> meters</div>
+</div>
+
+<div id="results">
+    <p id="maxHeight">Maximum height: </p>
+    <p id="jumpTime">Jump time: </p>
+</div>
+
+<script>
+    $(document).ready(function() {
+        const heightMarks = $('#heightMarks');
+        const offset = 40; // Изменено с 70 на 30 для опускания шкалы на 0.4 метра вниз
+
+        for (let i = 0; i <= 100; i += 1) {
+            const mark = $('<div class="height-mark"></div>');
+            const label = $('<div class="height-label"></div>');
+            const position = 10000 - (i * 100) - offset;
+            mark.css('top', position + 'px');
+            label.css('top', position + 'px');
+            label.text(i + 'm');
+            heightMarks.append(mark);
+            heightMarks.append(label);
+        }
+
+        for (let i = 0; i <= 1000; i += 1) {
+            const mark = $('<div class="height-mark-small"></div>');
+            const position = 10000 - (i * 10) - offset;
+            mark.css('top', position + 'px');
+            heightMarks.append(mark);
+        }
+
+        const slider = document.getElementById("heightSlider");
+        const sliderValue = document.getElementById("sliderValue");
+        const container = $(".container");
+        const heightIndicator = $("#heightIndicator");
+        const person = $(".person");
+        const content = $(".content");
+
+        container.scrollTop(10000 - 400);
+        updateHeightIndicator();
+
+        function updateHeightIndicator() {
+            const personBottom = parseInt(person.css('bottom'));
+            const groundHeight = 70; // Изменено с 50 на 70
+            const height = (personBottom - 30) / 100; // Изменено для корректного отображения высоты
+            heightIndicator.text(height.toFixed(1) + 'm');
+            heightIndicator.css({
+                'bottom': (personBottom - 15) + 'px',
+                'right': '45px'
+            });
+        }
+
+        function updateSliderFromScroll(scrollTop) {
+            if (scrollTop >= 10000 - 400) {
+                slider.value = -1;
+                sliderValue.textContent = -1;
+            } else {
+                const scrollPercent = (10000 - 400 - scrollTop - offset) / (10000 - 400);
+                const height = Math.round(scrollPercent * 100);
+                slider.value = height;
+                sliderValue.textContent = height;
+            }
+        }
+
+        function keepPersonInView() {
+            const containerHeight = container.height();
+            const personBottom = parseInt(person.css('bottom'));
+            const contentHeight = content.height();
+            const personPositionFromTop = contentHeight - personBottom - person.height();
+            const containerMiddle = containerHeight / 2;
+            const targetScroll = personPositionFromTop - containerMiddle + person.height() / 2;
+            container.scrollTop(targetScroll);
+            updateSliderFromScroll(targetScroll);
+        }
+
+        slider.oninput = function() {
+            const value = this.value;
+            sliderValue.textContent = value;
+            if (value == -1) {
+                container.scrollTop(10000 - 400);
+            } else {
+                const scrollPosition = 10000 - 400 - (value * 100) - offset;
+                container.scrollTop(scrollPosition);
+            }
+        }
+
+        container.on('scroll', function() {
+            const scrollTop = container.scrollTop();
+            updateSliderFromScroll(scrollTop);
+        });
+
+        // Устанавливаем начальный фон в зависимости от выбранной планеты
+        const initialPlanet = $("#planet").val();
+        if (initialPlanet === 'earth') {
+            $(".container").removeClass("space").addClass("earth-sky");
+        } else {
+            $(".container").removeClass("earth-sky").addClass("space");
+        }
+
+        $("#planet").on("change", function() {
+            const selectedPlanet = $(this).val();
+            $(".ground").removeClass().addClass("ground " + selectedPlanet);
+            
+            // Переключаем классы вместо прямой установки стиля
+            if (selectedPlanet === 'earth') {
+                $(".container").removeClass("space").addClass("earth-sky");
+            } else {
+                $(".container").removeClass("earth-sky").addClass("space");
+            }
+        });
+
+        $("#jumpForm").on("submit", function(event) {
+            event.preventDefault();
+            $.ajax({
+                url: "/jump",
+                type: "POST",
+                data: {
+                    planet: $("#planet").val(),
+                    velocity: $("#velocity").val()
+                },
+                success: function(response) {
+                    $("#maxHeight").text("Maximum height: " + response.maxHeight.toFixed(2) + " m");
+                    $("#jumpTime").text("Jump time: " + response.jumpTime.toFixed(2) + " s");
+                    animateJump(response.maxHeight, response.jumpTime);
+                }
+            });
+        });
+
+        function animateJump(maxHeight, jumpTime) {
+            const groundHeight = 30;
+            const jumpPixels = Math.min(maxHeight * 100, 10000);
+            let startTime = null;
+
+            const leftArm = document.getElementById('leftArm');
+            const rightArm = document.getElementById('rightArm');
+            const leftLeg = document.getElementById('leftLeg');
+            const rightLeg = document.getElementById('rightLeg');
+
+            function animate(currentTime) {
+                if (!startTime) startTime = currentTime;
+                const progress = (currentTime - startTime) / (jumpTime * 1000);
+
+                if (progress <= 1) {
+                    // Высота прыжка
+                    const height = groundHeight + jumpPixels * Math.sin(Math.PI * progress);
+                    person.css('bottom', height + "px");
+
+                    // Фаза движения (от 0 до 2π)
+                    const phase = progress * Math.PI * 2;
+                    
+                    // Противофазное движение рук и ног
+                    const armAngle = 10; // Уменьшенный угол для рук
+                    const legAngle = 5;  // Минимальный угол для ног
+
+                    // Руки движутся в противофазе
+                    leftArm.style.transform = `rotate(${Math.sin(phase) * armAngle}deg)`;
+                    rightArm.style.transform = `rotate(${-Math.sin(phase) * armAngle}deg)`;
+
+                    // Ноги движутся в противофазе к рукам
+                    leftLeg.style.transform = `rotate(${-Math.sin(phase) * legAngle}deg)`;
+                    rightLeg.style.transform = `rotate(${Math.sin(phase) * legAngle}deg)`;
+
+                    updateHeightIndicator();
+                    keepPersonInView();
+                    requestAnimationFrame(animate);
+                } else {
+                    // Возвращение в исходное положение
+                    [leftArm, rightArm, leftLeg, rightLeg].forEach(element => {
+                        element.style.transform = 'rotate(0deg)';
+                    });
+
+                    person.css('bottom', groundHeight + "px");
+                    updateHeightIndicator();
+                    keepPersonInView();
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+    });
+</script>
+</body>
+</html>
